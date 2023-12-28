@@ -3,7 +3,8 @@ import {
   VERSION,
   ViewChild,
   OnInit,
-  ElementRef} from '@angular/core';
+  ElementRef
+} from '@angular/core';
 import { interval, Subscription } from 'rxjs';
 
 enum RecordingState {
@@ -20,13 +21,12 @@ declare var MediaRecorder: any;
   styleUrls: ['./app.component.css']
 })
 export class AppComponent implements OnInit {
-  @ViewChild('recordedVideo') recordVideoElementRef: ElementRef;
+
   @ViewChild('video') videoElementRef: ElementRef;
   @ViewChild('timer', { static: true }) timer: ElementRef;
 
 
   videoElement: HTMLVideoElement;
-  recordVideoElement: HTMLVideoElement;
   mediaRecorder: any;
   recordedBlobs: Blob[];
   downloadUrl: string;
@@ -35,41 +35,38 @@ export class AppComponent implements OnInit {
   countdown: number = 60; // 1 minute in seconds
   countdownSubscription: Subscription;
   currentState: RecordingState = RecordingState.None;
-
+  recordedVideoSize: number;
   recordingState = RecordingState;
-  constructor() {}
+  constructor() { }
 
   async ngOnInit() {
     navigator.mediaDevices
       .getUserMedia({
-        video: {
-          width: 360
-        },
+        video: { width: 320, height: 240 },
         audio: true
       })
       .then(stream => {
         this.videoElement = this.videoElementRef.nativeElement;
-        this.recordVideoElement = this.recordVideoElementRef.nativeElement;
-
         this.stream = stream;
         this.videoElement.srcObject = this.stream;
       });
   }
 
   startRecording() {
-  
+
     this.recordedBlobs = [];
     this.countdown = 60; // Reset countdown to 60 seconds
     this.updateCountdown(); // Start countdown
-    let options: any = { mimeType: 'video/webm' };
+    let options: any = { mimeType: this.getValidMimeTypeForDevice() };
 
     try {
       this.mediaRecorder = new MediaRecorder(this.stream, options);
     } catch (err) {
       console.log(err);
+      alert(err);
     }
 
-    this.mediaRecorder.start(); // collect 100ms of data
+    this.mediaRecorder.start();
     this.changeRecordingStateTo(RecordingState.Recording);
     this.onDataAvailableEvent();
     this.onStopRecordingEvent();
@@ -86,7 +83,6 @@ export class AppComponent implements OnInit {
 
   updateCountdown() {
     this.countdownSubscription = interval(1000).subscribe(() => {
-      console.log(this.countdown);
       this.countdown--;
       if (this.countdown <= 0) {
         this.stopRecording(); // Stop recording after 1 minute
@@ -100,7 +96,7 @@ export class AppComponent implements OnInit {
       console.log('cannot play.');
       return;
     }
-    this.recordVideoElement.play();
+    this.videoElement.play();
   }
 
   onDataAvailableEvent() {
@@ -119,13 +115,17 @@ export class AppComponent implements OnInit {
     try {
       this.mediaRecorder.onstop = (event: Event) => {
         const videoBuffer = new Blob(this.recordedBlobs, {
-          type: 'video/mp4'
+          type: this.getValidMimeTypeForDevice()
         });
+        
         this.downloadUrl = window.URL.createObjectURL(videoBuffer);
-        this.recordVideoElement.src = this.downloadUrl;
+        this.videoElement.srcObject = null;
+        this.videoElement.src = this.downloadUrl;
         if (this.countdownSubscription) {
           this.countdownSubscription.unsubscribe(); // Stop the countdown
         }
+
+        this.calculateSizeOfVideo();
       };
     } catch (error) {
       console.log(error);
@@ -148,13 +148,31 @@ export class AppComponent implements OnInit {
 
   resetRecordingState() {
     this.changeRecordingStateTo(RecordingState.None);
+    this.videoElement.src = null;
+    this.videoElement.srcObject = this.stream;
+    this.countdown = 60;
     this.recordedBlobs = null;
     if (this.countdownSubscription) {
       this.countdownSubscription.unsubscribe();
     }
   }
 
-  private changeRecordingStateTo(state :RecordingState) {
+  private changeRecordingStateTo(state: RecordingState) {
     this.currentState = state;
+  }
+
+  private getValidMimeTypeForDevice() {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const mimeType = isIOS ? 'video/mp4' : 'video/webm';
+    return mimeType;
+  }
+
+  private calculateSizeOfVideo() {
+    // Calculate total size of all Blobs in bytes
+    const totalSizeInBytes = this.recordedBlobs.reduce((acc, blob) => acc + blob.size, 0);
+
+    // Convert bytes to megabytes
+    const totalSizeInMegabytes = totalSizeInBytes / (1024 * 1024);
+    console.log("size" + totalSizeInMegabytes + "MB")
   }
 }

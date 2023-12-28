@@ -1,7 +1,6 @@
 <div style="text-align:center">
     
-  <video class="video" [style.visibility]="currentState !== recordingState.Finished ? 'visible' : 'hidden'" #video autoplay playsinline controls></video>
-  <video class="video" [style.visibility]="currentState === recordingState.Finished ? 'visible' : 'hidden'" style="width:360px !important;" controls #recordedVideo playsinline></video>
+  <video class="video" #video autoplay controls playsinline></video>
   
   <br>
   <div>
@@ -9,13 +8,15 @@
       <p>Time remaining: </p>
       <p #timer> </p>
     </div>
-
-    <button class="btn btn-primary btn-lg" (click)="startRecording()" *ngIf="currentState === recordingState.None">Start Recording</button>
-    <button class="btn btn-warning btn-lg" (click)="stopRecording()" *ngIf="currentState === recordingState.Recording">Stop Recording</button>
+    <p style="font-weight: bold; color: red;">
+      {{currentState}}
+    </p>
+    <button class="btn btn-primary btn-lg" (click)="startRecording()" *ngIf="currentState == recordingState.None">Start Recording</button>
+    <button class="btn btn-warning btn-lg" (click)="stopRecording()" *ngIf="currentState == recordingState.Recording">Stop Recording</button>
     <button class="btn btn-success btn-lg" (click)="submitRecording()"
-            *ngIf="currentState === recordingState.Finished">Submit</button>
+            *ngIf="currentState == recordingState.Finished">Submit</button>
     <button class="btn btn-danger btn-lg" (click)="deleteRecording()"
-            *ngIf="currentState === recordingState.Finished">Delete</button>
+            *ngIf="currentState == recordingState.Finished">Delete</button>
 
   </div>
 </div>
