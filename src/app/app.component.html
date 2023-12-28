@@ -1,8 +1,8 @@
 <div style="text-align:center">
-  <h1>Welcome to WebRTC</h1>
-  <video class="video" #video autoplay playsinline controls></video>
-  <span class="m-1"></span>
-  <video class="video" style="width:360px !important;" controls #recordedVideo playsinline></video>
+    
+  <video class="video" [style.visibility]="currentState !== recordingState.Finished ? 'visible' : 'hidden'" #video autoplay playsinline controls></video>
+  <video class="video" [style.visibility]="currentState === recordingState.Finished ? 'visible' : 'hidden'" style="width:360px !important;" controls #recordedVideo playsinline></video>
+  
   <br>
   <div>
     <div>
