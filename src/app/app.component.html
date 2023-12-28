@@ -1,9 +1,21 @@
 <div style="text-align:center">
   <h1>Welcome to WebRTC</h1>
-  <video class="video" #video autoplay controls></video>
+  <video class="video" #video autoplay playsinline controls></video>
   <span class="m-1"></span>
-  <video class="video" style="width:360 !important;" controls #recordedVideo></video>
+  <video class="video" style="width:360px !important;" controls #recordedVideo playsinline></video>
   <br>
-  <button class="btn btn-primary btn-lg" *ngIf="!isRecording" (click)="startRecording()">Start Recording</button>
-  <button class="btn btn-warning btn-lg" *ngIf="isRecording" (click)="stopRecording()">Stop Recording</button>
+  <div>
+    <div>
+      <p>Time remaining: </p>
+      <p #timer> </p>
+    </div>
+
+    <button class="btn btn-primary btn-lg" (click)="startRecording()" *ngIf="currentState === recordingState.None">Start Recording</button>
+    <button class="btn btn-warning btn-lg" (click)="stopRecording()" *ngIf="currentState === recordingState.Recording">Stop Recording</button>
+    <button class="btn btn-success btn-lg" (click)="submitRecording()"
+            *ngIf="currentState === recordingState.Finished">Submit</button>
+    <button class="btn btn-danger btn-lg" (click)="deleteRecording()"
+            *ngIf="currentState === recordingState.Finished">Delete</button>
+
+  </div>
 </div>

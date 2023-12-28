@@ -3,8 +3,16 @@ import {
   VERSION,
   ViewChild,
   OnInit,
-  ElementRef
-} from '@angular/core';
+  ElementRef} from '@angular/core';
+import { interval, Subscription } from 'rxjs';
+
+enum RecordingState {
+  None = 'none',
+  Recording = 'recording',
+  Finished = 'finished'
+}
+
+
 declare var MediaRecorder: any;
 @Component({
   selector: 'my-app',
@@ -14,15 +22,21 @@ declare var MediaRecorder: any;
 export class AppComponent implements OnInit {
   @ViewChild('recordedVideo') recordVideoElementRef: ElementRef;
   @ViewChild('video') videoElementRef: ElementRef;
+  @ViewChild('timer', { static: true }) timer: ElementRef;
+
 
   videoElement: HTMLVideoElement;
   recordVideoElement: HTMLVideoElement;
   mediaRecorder: any;
   recordedBlobs: Blob[];
-  isRecording: boolean = false;
   downloadUrl: string;
   stream: MediaStream;
 
+  countdown: number = 60; // 1 minute in seconds
+  countdownSubscription: Subscription;
+  currentState: RecordingState = RecordingState.None;
+
+  recordingState = RecordingState;
   constructor() {}
 
   async ngOnInit() {
@@ -31,7 +45,7 @@ export class AppComponent implements OnInit {
         video: {
           width: 360
         },
-        audio: true        
+        audio: true
       })
       .then(stream => {
         this.videoElement = this.videoElementRef.nativeElement;
@@ -43,7 +57,10 @@ export class AppComponent implements OnInit {
   }
 
   startRecording() {
+  
     this.recordedBlobs = [];
+    this.countdown = 60; // Reset countdown to 60 seconds
+    this.updateCountdown(); // Start countdown
     let options: any = { mimeType: 'video/webm' };
 
     try {
@@ -53,15 +70,29 @@ export class AppComponent implements OnInit {
     }
 
     this.mediaRecorder.start(); // collect 100ms of data
-    this.isRecording = !this.isRecording;
+    this.changeRecordingStateTo(RecordingState.Recording);
     this.onDataAvailableEvent();
     this.onStopRecordingEvent();
   }
 
   stopRecording() {
+    if (this.countdownSubscription) {
+      this.countdownSubscription.unsubscribe(); // Stop the countdown
+    }
     this.mediaRecorder.stop();
-    this.isRecording = !this.isRecording;
+    this.changeRecordingStateTo(RecordingState.Finished);
     console.log('Recorded Blobs: ', this.recordedBlobs);
+  }
+
+  updateCountdown() {
+    this.countdownSubscription = interval(1000).subscribe(() => {
+      console.log(this.countdown);
+      this.countdown--;
+      if (this.countdown <= 0) {
+        this.stopRecording(); // Stop recording after 1 minute
+      }
+      this.timer.nativeElement.innerText = this.countdown;
+    });
   }
 
   playRecording() {
@@ -88,13 +119,42 @@ export class AppComponent implements OnInit {
     try {
       this.mediaRecorder.onstop = (event: Event) => {
         const videoBuffer = new Blob(this.recordedBlobs, {
-          type: 'video/webm'
+          type: 'video/mp4'
         });
-        this.downloadUrl = window.URL.createObjectURL(videoBuffer); // you can download with <a> tag
+        this.downloadUrl = window.URL.createObjectURL(videoBuffer);
         this.recordVideoElement.src = this.downloadUrl;
+        if (this.countdownSubscription) {
+          this.countdownSubscription.unsubscribe(); // Stop the countdown
+        }
       };
     } catch (error) {
       console.log(error);
     }
+  }
+
+  submitRecording() {
+    // Handle the logic to submit the recording, e.g., send to server
+    console.log('Recording submitted!');
+    // Reset UI and state
+    this.resetRecordingState();
+  }
+
+  deleteRecording() {
+    // Handle the logic to delete the recorded video
+    console.log('Recording deleted!');
+    // Reset UI and state
+    this.resetRecordingState();
+  }
+
+  resetRecordingState() {
+    this.changeRecordingStateTo(RecordingState.None);
+    this.recordedBlobs = null;
+    if (this.countdownSubscription) {
+      this.countdownSubscription.unsubscribe();
+    }
+  }
+
+  private changeRecordingStateTo(state :RecordingState) {
+    this.currentState = state;
   }
 }
