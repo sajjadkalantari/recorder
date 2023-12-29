@@ -31,18 +31,22 @@ export class AppComponent implements OnInit {
   recordedBlobs: Blob[];
   downloadUrl: string;
   stream: MediaStream;
-
   countdown: number = 60; // 1 minute in seconds
   countdownSubscription: Subscription;
   currentState: RecordingState = RecordingState.None;
   recordedVideoSize: number;
   recordingState = RecordingState;
+
   constructor() { }
 
   async ngOnInit() {
     navigator.mediaDevices
       .getUserMedia({
-        video: { width: 320, height: 240 },
+        video: {
+          width: 320,
+          height: 240,
+          frameRate: 30,
+        },
         audio: true
       })
       .then(stream => {
@@ -117,7 +121,7 @@ export class AppComponent implements OnInit {
         const videoBuffer = new Blob(this.recordedBlobs, {
           type: this.getValidMimeTypeForDevice()
         });
-        
+
         this.downloadUrl = window.URL.createObjectURL(videoBuffer);
         this.videoElement.srcObject = null;
         this.videoElement.src = this.downloadUrl;
@@ -125,7 +129,6 @@ export class AppComponent implements OnInit {
           this.countdownSubscription.unsubscribe(); // Stop the countdown
         }
 
-        this.calculateSizeOfVideo();
       };
     } catch (error) {
       console.log(error);
@@ -136,6 +139,8 @@ export class AppComponent implements OnInit {
     // Handle the logic to submit the recording, e.g., send to server
     console.log('Recording submitted!');
     // Reset UI and state
+
+    this.calculateSizeOfVideo();
     this.resetRecordingState();
   }
 
@@ -173,6 +178,6 @@ export class AppComponent implements OnInit {
 
     // Convert bytes to megabytes
     const totalSizeInMegabytes = totalSizeInBytes / (1024 * 1024);
-    console.log("size" + totalSizeInMegabytes + "MB")
+    alert("size of the video is " + totalSizeInMegabytes.toFixed(2) + " MB")
   }
 }
