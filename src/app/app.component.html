@@ -1,22 +1,27 @@
-<div style="text-align:center">
-    
-  <video class="video" #video autoplay controls playsinline></video>
-  
-  <br>
-  <div>
-    <div>
-      <p>Time remaining: </p>
-      <p #timer> </p>
-    </div>
-    <p style="font-weight: bold; color: red;">
-      {{currentState}}
-    </p>
-    <button class="btn btn-primary btn-lg" (click)="startRecording()" *ngIf="currentState == recordingState.None">Start Recording</button>
-    <button class="btn btn-warning btn-lg" (click)="stopRecording()" *ngIf="currentState == recordingState.Recording">Stop Recording</button>
-    <button class="btn btn-success btn-lg" (click)="submitRecording()"
-            *ngIf="currentState == recordingState.Finished">Submit</button>
-    <button class="btn btn-danger btn-lg" (click)="deleteRecording()"
-            *ngIf="currentState == recordingState.Finished">Delete</button>
+<div class="container text-center">
 
+  <div class="row">
+    <div class="col-lg-8 offset-lg-2 col-md-10 offset-md-1 col-12">
+      <video class="video w-100 rounded" #video autoplay controls playsinline></video>
+    </div>
   </div>
+
+  <br>
+
+  <div class="row">
+    <div class="col-lg-8 offset-lg-2 col-md-10 offset-md-1 col-12">
+      <div class="text-center mb-4">
+        <p class="h5">Time remaining: </p>
+        <p #timer class="h6"></p>
+      </div>
+      <p class="font-weight-bold text-danger">
+        {{currentState}}
+      </p>
+      <button class="btn btn-primary btn-lg mr-2" (click)="startRecording()" *ngIf="currentState == recordingState.None">Start Recording</button>
+      <button class="btn btn-warning btn-lg mr-2" (click)="stopRecording()" *ngIf="currentState == recordingState.Recording">Stop Recording</button>
+      <button class="btn btn-success btn-lg mr-2" (click)="submitRecording()" *ngIf="currentState == recordingState.Finished">Submit</button>
+      <button class="btn btn-danger btn-lg" (click)="deleteRecording()" *ngIf="currentState == recordingState.Finished">Delete</button>
+    </div>
+  </div>
+
 </div>
