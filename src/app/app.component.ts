@@ -42,12 +42,22 @@ export class AppComponent implements OnInit {
   async ngOnInit() {
     navigator.mediaDevices
       .getUserMedia({
-        video: {
-          width: 320,
-          height: 240,
-          frameRate: 30,
-        },
+        video: true,
         audio: true
+        // video: {
+        //   width: 200,
+        //   height: 100,
+        //   frameRate: 30,
+        //   echoCancellation: true,
+        //   noiseSuppression: true,
+        //   autoGainControl: true,
+        // },
+        // audio: {
+        //   echoCancellation: true,
+        //   noiseSuppression: true,
+        //   autoGainControl: true,
+        //   frameRate: 120
+        // }
       })
       .then(stream => {
         this.videoElement = this.videoElementRef.nativeElement;
@@ -61,7 +71,11 @@ export class AppComponent implements OnInit {
     this.recordedBlobs = [];
     this.countdown = 60; // Reset countdown to 60 seconds
     this.updateCountdown(); // Start countdown
-    let options: any = { mimeType: this.getValidMimeTypeForDevice() };
+    let options: any = {
+      mimeType: this.getValidMimeTypeForDevice(),
+      audioBitsPerSecond: 128000,
+      videoBitsPerSecond: 500000,
+    };
 
     try {
       this.mediaRecorder = new MediaRecorder(this.stream, options);
