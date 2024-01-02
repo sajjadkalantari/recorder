@@ -42,22 +42,20 @@ export class AppComponent implements OnInit {
   async ngOnInit() {
     navigator.mediaDevices
       .getUserMedia({
-        video: true,
-        audio: true
-        // video: {
-        //   width: 200,
-        //   height: 100,
-        //   frameRate: 30,
-        //   echoCancellation: true,
-        //   noiseSuppression: true,
-        //   autoGainControl: true,
-        // },
-        // audio: {
-        //   echoCancellation: true,
-        //   noiseSuppression: true,
-        //   autoGainControl: true,
-        //   frameRate: 120
-        // }
+        video: {
+          // width: 200,
+          // height: 100,
+          // frameRate: 30,
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          // frameRate: 120
+        }
       })
       .then(stream => {
         this.videoElement = this.videoElementRef.nativeElement;
