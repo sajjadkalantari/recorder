@@ -71,8 +71,8 @@ export class AppComponent implements OnInit {
     this.updateCountdown(); // Start countdown
     let options: any = {
       mimeType: this.getValidMimeTypeForDevice(),
-      audioBitsPerSecond: 128000,
-      videoBitsPerSecond: 500000,
+      audioBitsPerSecond: 32000, // Low bit rate for voice or simple audio
+      videoBitsPerSecond: 500000, // Low bit rate for low-motion video
     };
 
     try {
