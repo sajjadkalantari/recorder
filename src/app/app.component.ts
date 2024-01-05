@@ -1,9 +1,9 @@
 import {
   Component,
-  VERSION,
   ViewChild,
   OnInit,
-  ElementRef
+  ElementRef,
+  OnDestroy
 } from '@angular/core';
 import { interval, Subscription } from 'rxjs';
 
@@ -13,33 +13,42 @@ enum RecordingState {
   Finished = 'finished'
 }
 
+const DEFAULT_COUNTDOWN = 60;
+const AUDIO_BIT_RATE = 32000;
+const VIDEO_BIT_RATE = 500000;
 
-declare var MediaRecorder: any;
 @Component({
   selector: 'my-app',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit, OnDestroy {
 
   @ViewChild('video') videoElementRef: ElementRef;
   @ViewChild('timer', { static: true }) timer: ElementRef;
 
+  private videoElement: HTMLVideoElement;
+  private mediaRecorder: MediaRecorder;
+  private recordedBlobs: Blob[] = [];
+  private downloadUrl: string;
+  private stream: MediaStream;
+  private countdownSubscription: Subscription;
 
-  videoElement: HTMLVideoElement;
-  mediaRecorder: any;
-  recordedBlobs: Blob[];
-  downloadUrl: string;
-  stream: MediaStream;
-  countdown: number = 60; // 1 minute in seconds
-  countdownSubscription: Subscription;
+  countdown: number = DEFAULT_COUNTDOWN;
   currentState: RecordingState = RecordingState.None;
-  recordedVideoSize: number;
   recordingState = RecordingState;
 
   constructor() { }
 
-  async ngOnInit() {
+  ngOnInit() {
+    this.initMediaStream();
+  }
+
+  ngOnDestroy() {
+    this.stopMediaStream();
+  }
+
+  private initMediaStream() {
     navigator.mediaDevices
       .getUserMedia({
         video: {
@@ -57,25 +66,25 @@ export class AppComponent implements OnInit {
         this.videoElement = this.videoElementRef.nativeElement;
         this.stream = stream;
         this.videoElement.srcObject = stream;
-        this.videoElement.muted = true;        
+        this.videoElement.muted = true;
       });
   }
 
   startRecording() {
-
     this.recordedBlobs = [];
-    this.countdown = 60; // Reset countdown to 60 seconds
-    this.updateCountdown(); // Start countdown
-    let options: any = {
+    this.countdown = DEFAULT_COUNTDOWN;
+    this.updateCountdown();
+
+    const options: any = {
       mimeType: this.getValidMimeTypeForDevice(),
-      audioBitsPerSecond: 32000, // Low bit rate for voice or simple audio
-      videoBitsPerSecond: 500000, // Low bit rate for low-motion video
+      audioBitsPerSecond: AUDIO_BIT_RATE,
+      videoBitsPerSecond: VIDEO_BIT_RATE,
     };
 
     try {
       this.mediaRecorder = new MediaRecorder(this.stream, options);
     } catch (err) {
-      console.log(err);
+      console.error(err);
       alert(err);
     }
 
@@ -86,9 +95,7 @@ export class AppComponent implements OnInit {
   }
 
   stopRecording() {
-    if (this.countdownSubscription) {
-      this.countdownSubscription.unsubscribe(); // Stop the countdown
-    }
+    this.clearCountdown();
     this.mediaRecorder.stop();
     this.changeRecordingStateTo(RecordingState.Finished);
     console.log('Recorded Blobs: ', this.recordedBlobs);
@@ -97,16 +104,16 @@ export class AppComponent implements OnInit {
   updateCountdown() {
     this.countdownSubscription = interval(1000).subscribe(() => {
       this.countdown--;
-      if (this.countdown <= 0) {
-        this.stopRecording(); // Stop recording after 1 minute
-      }
-      this.timer.nativeElement.innerText = this.countdown;
+      if (this.countdown <= 0)
+        this.stopRecording();
+
+      this.updateTimerDisplay();
     });
   }
 
   playRecording() {
     if (!this.recordedBlobs || !this.recordedBlobs.length) {
-      console.log('cannot play.');
+      console.log('Cannot play.');
       return;
     }
     this.videoElement.play();
@@ -115,64 +122,52 @@ export class AppComponent implements OnInit {
   onDataAvailableEvent() {
     try {
       this.mediaRecorder.ondataavailable = (event: any) => {
-        if (event.data && event.data.size > 0) {
+        if (event.data && event.data.size > 0) 
           this.recordedBlobs.push(event.data);
-        }
+        
       };
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   }
 
   onStopRecordingEvent() {
     try {
       this.mediaRecorder.onstop = (event: Event) => {
-        const videoBuffer = new Blob(this.recordedBlobs, {
-          type: this.getValidMimeTypeForDevice()
-        });
-
-        this.downloadUrl = window.URL.createObjectURL(videoBuffer);
-        this.videoElement.srcObject = null;
-        this.videoElement.src = this.downloadUrl;
-        this.videoElement.muted = false;
-        this.videoElement.controls = true;
-        if (this.countdownSubscription) {
-          this.countdownSubscription.unsubscribe(); // Stop the countdown
-        }
-
+        this.handleRecordingStop();
       };
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   }
 
-  submitRecording() {
-    // Handle the logic to submit the recording, e.g., send to server
-    console.log('Recording submitted!');
-    // Reset UI and state
+  private handleRecordingStop() {
+    const videoBuffer = new Blob(this.recordedBlobs, {
+      type: this.getValidMimeTypeForDevice()
+    });
 
+    this.downloadUrl = window.URL.createObjectURL(videoBuffer);
+    this.updateVideoElement();
+    this.clearCountdown();
+  }
+
+  submitRecording() {
+    console.log('Recording submitted!');
     this.calculateSizeOfVideo();
     this.resetRecordingState();
   }
 
   deleteRecording() {
-    // Handle the logic to delete the recorded video
     console.log('Recording deleted!');
-    // Reset UI and state
     this.resetRecordingState();
   }
 
   resetRecordingState() {
     this.changeRecordingStateTo(RecordingState.None);
-    this.videoElement.src = null;
-    this.videoElement.srcObject = this.stream;
-    this.videoElement.muted = true;
-    this.videoElement.controls = false;
-    this.countdown = 60;
+    this.resetVideoElement();
+    this.clearCountdown();
     this.recordedBlobs = null;
-    if (this.countdownSubscription) {
-      this.countdownSubscription.unsubscribe();
-    }
+    this.timer.nativeElement.innerText = "";
   }
 
   private changeRecordingStateTo(state: RecordingState) {
@@ -181,16 +176,60 @@ export class AppComponent implements OnInit {
 
   private getValidMimeTypeForDevice() {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const mimeType = isIOS ? 'video/mp4' : 'video/webm';
-    return mimeType;
+    return isIOS ? 'video/mp4' : 'video/webm';
   }
 
   private calculateSizeOfVideo() {
-    // Calculate total size of all Blobs in bytes
     const totalSizeInBytes = this.recordedBlobs.reduce((acc, blob) => acc + blob.size, 0);
-
-    // Convert bytes to megabytes
     const totalSizeInMegabytes = totalSizeInBytes / (1024 * 1024);
-    alert("size of the video is " + totalSizeInMegabytes.toFixed(2) + " MB")
+    alert("Size of the video is " + totalSizeInMegabytes.toFixed(2) + " MB");
+  }
+
+  private resetVideoElement() {
+    this.videoElement.src = null;
+    this.videoElement.srcObject = this.stream;
+    this.videoElement.muted = true;
+    this.videoElement.controls = false;
+  }
+
+  private updateVideoElement() {
+    this.videoElement.srcObject = null;
+    this.videoElement.src = this.downloadUrl;
+    this.videoElement.muted = false;
+    this.videoElement.controls = true;
+  }
+
+  private clearCountdown() {
+    if (this.countdownSubscription)
+      this.countdownSubscription.unsubscribe();
+  }
+
+  private stopMediaStream() {
+    if (this.stream) 
+      this.stream.getTracks().forEach(track => track.stop());
+    
+  }
+
+  private updateTimerDisplay() {
+    const timerElement = this.timer.nativeElement;
+  
+    if (this.countdown <= 10) {
+      timerElement.innerText = this.formatTime(this.countdown);
+      timerElement.style.color = 'red';
+    } else if (this.countdown <= 30) {
+      timerElement.innerText = this.formatTime(this.countdown);
+      timerElement.style.color = 'orange';
+    } else {
+      timerElement.innerText = this.formatTime(this.countdown);
+      timerElement.style.color = 'green';
+    }
+  }
+
+  private formatTime(seconds: number): string {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    const formattedMinutes = minutes < 10 ? `0${minutes}` : `${minutes}`;
+    const formattedSeconds = remainingSeconds < 10 ? `0${remainingSeconds}` : `${remainingSeconds}`;
+    return `${formattedMinutes}:${formattedSeconds}`;
   }
 }

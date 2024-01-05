@@ -16,6 +16,8 @@
       </div>
       <p class="font-weight-bold text-danger">
         {{currentState}}
+        <span *ngIf="currentState == recordingState.Recording" class="recording-indicator">🔴</span>
+
       </p>
       <button class="btn btn-primary btn-lg mr-2" (click)="startRecording()" *ngIf="currentState == recordingState.None">Start Recording</button>
       <button class="btn btn-warning btn-lg mr-2" (click)="stopRecording()" *ngIf="currentState == recordingState.Recording">Stop Recording</button>

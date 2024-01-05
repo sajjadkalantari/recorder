@@ -1,3 +1,17 @@
 p {
   font-family: Lato;
 }
+
+/* Add this to your component's CSS file */
+.recording-indicator {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 1.2em;
+  animation: pulse 0.8s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
