@@ -43,9 +43,6 @@ export class AppComponent implements OnInit {
     navigator.mediaDevices
       .getUserMedia({
         video: {
-          // width: 200,
-          // height: 100,
-          // frameRate: 30,
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
@@ -54,13 +51,13 @@ export class AppComponent implements OnInit {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
-          // frameRate: 120
         }
       })
       .then(stream => {
         this.videoElement = this.videoElementRef.nativeElement;
         this.stream = stream;
-        this.videoElement.srcObject = this.stream;
+        this.videoElement.srcObject = stream;
+        this.videoElement.muted = true;        
       });
   }
 
@@ -137,6 +134,8 @@ export class AppComponent implements OnInit {
         this.downloadUrl = window.URL.createObjectURL(videoBuffer);
         this.videoElement.srcObject = null;
         this.videoElement.src = this.downloadUrl;
+        this.videoElement.muted = false;
+        this.videoElement.controls = true;
         if (this.countdownSubscription) {
           this.countdownSubscription.unsubscribe(); // Stop the countdown
         }
@@ -167,6 +166,8 @@ export class AppComponent implements OnInit {
     this.changeRecordingStateTo(RecordingState.None);
     this.videoElement.src = null;
     this.videoElement.srcObject = this.stream;
+    this.videoElement.muted = true;
+    this.videoElement.controls = false;
     this.countdown = 60;
     this.recordedBlobs = null;
     if (this.countdownSubscription) {
