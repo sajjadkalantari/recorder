@@ -7,13 +7,14 @@ import {
 } from '@angular/core';
 import { interval, Subscription } from 'rxjs';
 
+// Enum to represent different recording states
 enum RecordingState {
   None = 'none',
   Recording = 'recording',
   Finished = 'finished'
 }
 
-const DEFAULT_COUNTDOWN = 60;
+const DEFAULT_COUNTDOWN = 60; // 1 minute
 const AUDIO_BIT_RATE = 32000;
 const VIDEO_BIT_RATE = 500000;
 
