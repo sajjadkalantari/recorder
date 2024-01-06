@@ -11,25 +11,6 @@ This Angular component allows users to record video with audio and provides feat
 npm install @angular/core
 npm install rxjs
 ```
-# Usage
-Import the AppComponent in your Angular module:
-
-```typescript
-import { AppComponent } from './app.component';
-```
-Add the AppComponent to the declarations array in your module:
-
-```typescript
-@NgModule({
-  declarations: [AppComponent],
-  // ...
-})
-export class YourModule { }
-Include the component selector (<my-app></my-app>) in your HTML to use the recorder.
-```
-```html
-<my-app></my-app>
-```
 # Features
 1. Start Recording: Begin capturing video with audio.
 2. Stop Recording: End the recording session and generate a playable video.
@@ -40,10 +21,10 @@ Include the component selector (<my-app></my-app>) in your HTML to use the recor
 7. Dynamic Timer Color: Changes the timer color based on the remaining time.
 
 # Dependencies
-Angular Core (@angular/core)
-RxJS (rxjs)
+- Angular Core (@angular/core)
+- RxJS (rxjs)
 
 # Configuration
-DEFAULT_COUNTDOWN: Default recording duration in seconds.
-AUDIO_BIT_RATE: Audio bitrate for recording.
-VIDEO_BIT_RATE: Video bitrate for recording.
+- DEFAULT_COUNTDOWN: Default recording duration in seconds.
+- AUDIO_BIT_RATE: Audio bitrate for recording.
+- VIDEO_BIT_RATE: Video bitrate for recording.
