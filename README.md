@@ -11,7 +11,7 @@ This Angular component allows users to record video with audio and provides feat
 npm install @angular/core
 npm install rxjs
 ```
-# Features
+## Features
 1. Start Recording: Begin capturing video with audio.
 2. Stop Recording: End the recording session and generate a playable video.
 3. Play Recording: Playback the recorded video.
@@ -20,11 +20,11 @@ npm install rxjs
 6. Countdown Display: Shows a countdown timer during the recording session.
 7. Dynamic Timer Color: Changes the timer color based on the remaining time.
 
-# Dependencies
+## Dependencies
 - Angular Core (@angular/core)
 - RxJS (rxjs)
 
-# Configuration
+## Configuration
 - DEFAULT_COUNTDOWN: Default recording duration in seconds.
 - AUDIO_BIT_RATE: Audio bitrate for recording.
 - VIDEO_BIT_RATE: Video bitrate for recording.
